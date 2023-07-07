@@ -11,5 +11,6 @@ data class GameState(
     val progress: Double = 0.0,
     val isFinished: Boolean = false,
     val winner: Boolean = false,
+    val greenProgress: Boolean = false,
     val gameSettings: GameSettings
 )

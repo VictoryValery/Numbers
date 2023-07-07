@@ -1,13 +1,17 @@
 package com.victoryvalery.numbers.presentation.game
 
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.victoryvalery.numbers.R
 import com.victoryvalery.numbers.databinding.FragmentGameBinding
 import com.victoryvalery.numbers.domain.entities.GameResult
@@ -15,50 +19,54 @@ import com.victoryvalery.numbers.domain.entities.Level
 import com.victoryvalery.numbers.presentation.GameFinishedFragment
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.lang.ref.WeakReference
 
 class GameFragment : Fragment() {
 
     private var _binding: FragmentGameBinding? = null
     private val binding get() = _binding ?: throw RuntimeException("FragmentGameBinding == null")
 
-    private val viewModel: GameViewModel by viewModels()
+//    private val viewModel: GameViewModel by viewModels()
+
+    private val viewModel by lazy {
+        ViewModelProvider(
+            this,
+            GameViewModelFactory(requireActivity().application, level)
+        )[GameViewModel::class.java]
+    }
 
     private lateinit var level: Level
+
+    private val tvOptions: MutableList<TextView> by lazy {
+        mutableListOf<TextView>().apply {
+            this.add(binding.tvOption1)
+            this.add(binding.tvOption2)
+            this.add(binding.tvOption3)
+            this.add(binding.tvOption4)
+            this.add(binding.tvOption5)
+            this.add(binding.tvOption6)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentGameBinding.inflate(layoutInflater, container, false)
+        _binding = FragmentGameBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         parseArgs()
-        viewModel.startGame(level)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.tvOption1.setOnClickListener {
-            viewModel.sendAnswer(binding.tvOption1.text.toString().toInt())
-        }
-        binding.tvOption2.setOnClickListener {
-            viewModel.sendAnswer(binding.tvOption2.text.toString().toInt())
-        }
-        binding.tvOption3.setOnClickListener {
-            viewModel.sendAnswer(binding.tvOption3.text.toString().toInt())
-        }
-        binding.tvOption4.setOnClickListener {
-            viewModel.sendAnswer(binding.tvOption4.text.toString().toInt())
-        }
-        binding.tvOption5.setOnClickListener {
-            viewModel.sendAnswer(binding.tvOption5.text.toString().toInt())
-        }
-        binding.tvOption6.setOnClickListener {
-            viewModel.sendAnswer(binding.tvOption6.text.toString().toInt())
+
+        tvOptions.forEach { textView ->
+            textView.setOnClickListener {
+                viewModel.sendAnswer(textView.text.toString().toInt())
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -67,9 +75,8 @@ class GameFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.timerState.collectLatest {
-                val text = WeakReference("00:${if (it > 9) it else "0$it"}")
-                binding.tvTimer.text = text.get()
+            viewModel.formattedTime.collectLatest {
+                binding.tvTimer.text = it
             }
         }
     }
@@ -87,16 +94,17 @@ class GameFragment : Fragment() {
         }
         binding.tvSum.text = gameState.question.sum.toString()
         binding.tvLeftNumber.text = gameState.question.visibleNumber.toString()
-        if (gameState.question.options.isNotEmpty()) {
-            binding.tvOption1.text = gameState.question.options[0].toString()
-            binding.tvOption2.text = gameState.question.options[1].toString()
-            binding.tvOption3.text = gameState.question.options[2].toString()
-            binding.tvOption4.text = gameState.question.options[3].toString()
-            binding.tvOption5.text = gameState.question.options[4].toString()
-            binding.tvOption6.text = gameState.question.options[5].toString()
-        }
+        if (gameState.question.options.isNotEmpty())
 
-        binding.progressBar.progress = gameState.progress.toInt()
+            tvOptions.forEachIndexed { index, textView ->
+                textView.text = gameState.question.options[index].toString()
+            }
+
+        binding.progressBar.setProgress(gameState.progress.toInt(), true)
+        val gameColor = getColorByState(gameState.greenProgress)
+        binding.progressBar.progressTintList = ColorStateList.valueOf(gameColor)
+        binding.tvAnswersProgress.setTextColor(gameColor)
+        binding.progressBar.secondaryProgress = gameState.gameSettings.minPercentOfRightAnswers
         binding.tvAnswersProgress.text = getString(
             R.string.progress_answers,
             gameState.countOfRightAnswers.toString(),
@@ -104,11 +112,23 @@ class GameFragment : Fragment() {
         )
     }
 
+    private fun getColorByState(greenProgress: Boolean): Int {
+        return if (greenProgress)
+            ContextCompat.getColor(requireContext(), android.R.color.holo_green_light)
+        else
+            ContextCompat.getColor(requireContext(), android.R.color.holo_red_light)
+    }
+
     private fun launchGameFinishedFragment(gameResult: GameResult) {
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.main_container, GameFinishedFragment.newInstance(gameResult))
-            .addToBackStack(null)
-            .commit()
+        //1
+//        requireActivity().supportFragmentManager.beginTransaction()
+//            .replace(R.id.main_container, GameFinishedFragment.newInstance(gameResult))
+//            .addToBackStack(null)
+//            .commit()
+        //2
+        val resBundle = Bundle().apply { putSerializable(GameFinishedFragment.GAME_RESULT, gameResult) }
+        findNavController().navigate(R.id.action_gameFragment_to_gameFinishedFragment, resBundle)
+
     }
 
     private fun parseArgs() {
@@ -125,7 +145,7 @@ class GameFragment : Fragment() {
 
     companion object {
 
-        private const val LEVEL = "LEVEL"
+        const val LEVEL = "LEVEL"
         const val NAME = "GameFragment"
 
         fun newInstance(level: Level): GameFragment {
