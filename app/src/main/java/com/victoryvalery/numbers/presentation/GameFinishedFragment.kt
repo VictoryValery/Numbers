@@ -52,6 +52,11 @@ class GameFinishedFragment : Fragment() {
 //                    onRetryGame()
 //                }
 //            })
+
+
+        //УСТАНОВКА ДЛЯ DATABINDING
+        binding.gameResult = res
+
         binding.buttonRetry.setOnClickListener {
             onRetryGame()
         }
@@ -65,15 +70,6 @@ class GameFinishedFragment : Fragment() {
                     R.drawable.ic_sad
             )
         )
-        binding.tvRequiredAnswers.text = getString(R.string.required_score, res.gameSettings.minCountOfRightAnswers.toString())
-        binding.tvScoreAnswers.text = getString(R.string.score_answers, res.countOfRightAnswers.toString())
-        binding.tvRequiredPercentage.text =
-            getString(R.string.required_percentage, res.gameSettings.minPercentOfRightAnswers.toString())
-        binding.tvScorePercentage.text = getString(
-            R.string.score_percentage,
-            (100 * (res.countOfRightAnswers).div(res.countOfQuestions.toDouble())).toString()
-        )
-
     }
 
     private fun onRetryGame() {
@@ -83,14 +79,6 @@ class GameFinishedFragment : Fragment() {
 
         //2
         findNavController().popBackStack()
-    }
-
-    private fun parseArg(): GameResult? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireArguments().getSerializable(GAME_RESULT, GameResult::class.java)
-        } else {
-            requireArguments().getSerializable(GAME_RESULT) as GameResult
-        }
     }
 
     override fun onDestroy() {
