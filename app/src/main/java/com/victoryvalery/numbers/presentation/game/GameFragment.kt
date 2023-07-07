@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.victoryvalery.numbers.R
 import com.victoryvalery.numbers.databinding.FragmentGameBinding
 import com.victoryvalery.numbers.domain.entities.GameResult
@@ -25,16 +26,24 @@ class GameFragment : Fragment() {
     private var _binding: FragmentGameBinding? = null
     private val binding get() = _binding ?: throw RuntimeException("FragmentGameBinding == null")
 
-//    private val viewModel: GameViewModel by viewModels()
+    //получение аргументов из навигации ещё вариант
+//    private val args by navArgs<GameFragmentArgs>()
 
+    //создание вью модели с аргументами в конструкторе с помощью фабрики и обычное
+//    private val viewModel: GameViewModel by viewModels()
     private val viewModel by lazy {
+
+    //получение аргументов из навигации
+    val args = GameFragmentArgs.fromBundle(requireArguments())
+    val level = args.level
+
         ViewModelProvider(
             this,
             GameViewModelFactory(requireActivity().application, level)
         )[GameViewModel::class.java]
     }
 
-    private lateinit var level: Level
+//    private lateinit var level: Level
 
     private val tvOptions: MutableList<TextView> by lazy {
         mutableListOf<TextView>().apply {
@@ -55,10 +64,10 @@ class GameFragment : Fragment() {
         return binding.root
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        parseArgs()
-    }
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        parseArgs()
+//    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -126,17 +135,22 @@ class GameFragment : Fragment() {
 //            .addToBackStack(null)
 //            .commit()
         //2
-        val resBundle = Bundle().apply { putSerializable(GameFinishedFragment.GAME_RESULT, gameResult) }
-        findNavController().navigate(R.id.action_gameFragment_to_gameFinishedFragment, resBundle)
+//        val resBundle = Bundle().apply { putSerializable(GameFinishedFragment.GAME_RESULT, gameResult) }
+//        findNavController().navigate(R.id.action_gameFragment_to_gameFinishedFragment, resBundle)
+
+        //3
+        findNavController().navigate(
+            GameFragmentDirections.actionGameFragmentToGameFinishedFragment(gameResult)
+        )
 
     }
 
-    private fun parseArgs() {
-        level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireArguments().getSerializable(LEVEL, Level::class.java) ?: Level.TEST
-        } else
-            requireArguments().getSerializable(LEVEL) as Level
-    }
+//    private fun parseArgs() {
+//        level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            requireArguments().getSerializable(LEVEL, Level::class.java) ?: Level.TEST
+//        } else
+//            requireArguments().getSerializable(LEVEL) as Level
+//    }
 
     override fun onDestroy() {
         super.onDestroy()

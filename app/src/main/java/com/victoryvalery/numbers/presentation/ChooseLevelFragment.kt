@@ -50,10 +50,13 @@ class ChooseLevelFragment : Fragment() {
 //            .commit()
 
         //2
-        val gameBundle = Bundle().apply {putSerializable(GameFragment.LEVEL, level) }
-        findNavController().navigate(R.id.action_chooseLevelFragment_to_gameFragment, gameBundle)
+//        val gameBundle = Bundle().apply {putSerializable(GameFragment.LEVEL, level) }
+//        findNavController().navigate(R.id.action_chooseLevelFragment_to_gameFragment, gameBundle)
 
         //3
+        findNavController().navigate(
+            ChooseLevelFragmentDirections.actionChooseLevelFragmentToGameFragment(level)
+        )
     }
 
     override fun onDestroy() {

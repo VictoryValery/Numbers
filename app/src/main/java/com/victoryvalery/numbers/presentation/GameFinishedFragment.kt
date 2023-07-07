@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.victoryvalery.numbers.R
 import com.victoryvalery.numbers.databinding.FragmentGameFinishedBinding
 import com.victoryvalery.numbers.domain.entities.GameResult
@@ -23,8 +24,12 @@ class GameFinishedFragment : Fragment() {
     private var _binding: FragmentGameFinishedBinding? = null
     private val binding get() = _binding ?: throw RuntimeException("FragmentGameFinishedBinding == null")
 
-    private val _res by lazy { parseArg() }
-    private val res get() = _res ?: throw RuntimeException("There is no game result")
+//    private val _res by lazy { parseArg() }
+//    private val res get() = _res ?: throw RuntimeException("There is no game result")
+
+    private val _res by navArgs<GameFinishedFragmentArgs>()
+    private val res get() = _res.gameResult
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
